@@ -3,8 +3,8 @@ module Lib
     ) where
 
 import Parser.Request
-import Model.Request as Req
-import Model.Response as Res
+import qualified Model.Request as Req
+import Model.Response
 
 import qualified Data.ByteString as S
 
@@ -17,8 +17,8 @@ handleRequest msg =
     headers' = show $ Req.headers req
     body' = Req.body req
   in
-    Res.serialize Res.Response
-      { Res.status = 200
-      , Res.headers = [("Content-Type", "text/plain")]
-      , Res.body = "You sent a " ++ method' ++ " request to " ++ path' ++ " with headers: " ++ headers' ++ " and body: " ++ body'
+    serialize Response
+      { status = 200
+      , headers = [("Content-Type", "text/plain")]
+      , body = "You sent a " ++ method' ++ " request to " ++ path' ++ " with headers: " ++ headers' ++ " and body: " ++ body'
       }

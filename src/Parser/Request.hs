@@ -7,6 +7,7 @@ import Model.Request
 import Model.Headers
 import qualified Data.ByteString as S
 import Data.List
+import Data.Char
 
 import Control.Monad.State
 
@@ -37,5 +38,5 @@ parseRequest = evalState $ do
     { method = read method'
     , path = path'
     , headers = headers'
-    , body = body'
+    , body = dropWhile isControl body'
     }
