@@ -2,29 +2,30 @@
 
 module Model.Response
  ( Response(..)
- , serialize
+ , serializeResponse
  , Respond(..)
  ) where
 
-import qualified Model.Headers as H
-import qualified Model.Json as J
+import Model.Headers
+import Model.Json
+
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as BC
 import Data.List
 
-data Response = Response { status :: Int, headers :: H.Headers, body :: S.ByteString }
+data Response = Response { status :: Int, headers :: Headers, body :: S.ByteString }
 
 serializeCode :: Int -> String
 serializeCode 200 = "200 OK"
 serializeCode c = show c
 
-serialize :: Response -> S.ByteString
-serialize res =
+serializeResponse :: Response -> S.ByteString
+serializeResponse res =
   let
     len = S.length (body res)
     head = BC.unlines $ map BC.pack
       [ "HTTP/1.1 " ++ serializeCode (status res)
-      , H.serialize (headers res)
+      , serializeHeaders (headers res)
       , "Content-Length: " ++ (show $ len)
       , ""
       ]
@@ -57,9 +58,9 @@ instance (Respond a) => Respond (Maybe a) where
     , body = BC.pack "Not Found"
     }
 
-instance Respond J.Json where
+instance Respond Json where
   respond json = Response
     { status = 200
     , headers = [("Content-Type", "application/json")]
-    , body = BC.pack $ J.serialize json
+    , body = BC.pack $ serializeJson json
     }

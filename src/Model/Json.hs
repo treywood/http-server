@@ -1,7 +1,7 @@
 module Model.Json
  ( Json(..)
  , JsonField
- , serialize
+ , serializeJson
  ) where
 
 import Data.List
@@ -9,14 +9,14 @@ import Data.List
 type JsonField = (String, Json)
 data Json = JsonInt Int | JsonString String | JsonBool Bool | JsonArray [Json] | JsonNull | JsonObject [JsonField] deriving (Show)
 
-serialize :: Json -> String
-serialize (JsonInt i) = show i
-serialize (JsonString s) = "\"" ++ s ++ "\""
-serialize JsonNull = "null"
-serialize (JsonBool True) = "true"
-serialize (JsonBool False) = "false"
-serialize (JsonArray arr) = "[" ++ (intercalate "," $ map serialize arr) ++ "]"
-serialize (JsonObject fields) = "{" ++ (intercalate "," $ map fmt fields) ++ "}"
+serializeJson :: Json -> String
+serializeJson (JsonInt i) = show i
+serializeJson (JsonString s) = "\"" ++ s ++ "\""
+serializeJson JsonNull = "null"
+serializeJson (JsonBool True) = "true"
+serializeJson (JsonBool False) = "false"
+serializeJson (JsonArray arr) = "[" ++ (intercalate "," $ map serializeJson arr) ++ "]"
+serializeJson (JsonObject fields) = "{" ++ (intercalate "," $ map fmt fields) ++ "}"
   where
     fmt :: JsonField -> String
-    fmt (name, val) = "\"" ++ name ++ "\":" ++ (serialize val)
+    fmt (name, val) = "\"" ++ name ++ "\":" ++ (serializeJson val)

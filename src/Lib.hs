@@ -5,7 +5,7 @@ module Lib
 import Parser.Request
 import qualified Model.Request as Req
 import Model.Response
-import qualified Model.Json as Json
+import Model.Json
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as BC
@@ -33,7 +33,7 @@ route Req.GET ["api", "greet", name] req =
     respond it
 
 route Req.GET ["api", "json"] _ =
-  respond $ Json.JsonObject [("name", Json.JsonString "Trey"), ("age", Json.JsonInt 30)]
+  respond $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
 
 route _ _ _ =
   respond (Nothing :: Maybe String)
@@ -45,4 +45,4 @@ handleRequest msg =
     pathParts = tail $ splitOn "/" (Req.path req)
     res = route (Req.method req) pathParts req
   in
-    serialize res
+    serializeResponse res

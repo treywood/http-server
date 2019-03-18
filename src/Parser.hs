@@ -5,6 +5,7 @@ module Parser
  , chompLine
  , chompAll
  , chompWhile
+ , chompIf
  , peek
  ) where
 
@@ -55,7 +56,27 @@ chompAll = chompAll' ""
         Just c  -> chompAll' (str ++ [c])
         _       -> return str
 
+chompIf :: (Char -> Bool) -> State S.ByteString (Maybe Char)
+chompIf p = do
+  maybeC <- peek
+  case maybeC of
+    Just c
+      | p c       -> chomp
+      | otherwise -> return Nothing
+
+    _ -> return Nothing
+
 peek :: State S.ByteString (Maybe Char)
 peek = state $ \str -> case (BC.uncons str) of
   Just (c, _)  -> (Just c, str)
   _            -> (Nothing, BC.empty)
+
+expect :: Char -> State S.ByteString (Either String ())
+expect char = do
+  maybeC <- peek
+  case maybeC of
+    Just c
+      | c == char -> return $ Right ()
+      | otherwise -> return (Left $ "expected '" ++ [char] ++ "' but found '" ++ [c])
+
+    _ -> return (Left $ "expected '" ++ [char] ++ "' but got end of input")
