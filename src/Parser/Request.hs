@@ -17,6 +17,7 @@ parseHeaders = parseHeaders' []
     parseHeaders' :: Headers -> State S.ByteString Headers
     parseHeaders' hs = do
       line <- chompLine
+      chomp
       if (null line) then
         return hs
       else
@@ -30,13 +31,17 @@ parseHeaders = parseHeaders' []
 parseRequest :: S.ByteString -> Request
 parseRequest = evalState $ do
   method' <- chompWord
+  chomp
+
   path' <- chompWord
-  chompLine
+  chomp
+
+  chompLine >> chomp
   headers' <- parseHeaders
-  body' <- chompAll
+  body' <- get
   return Request
     { method = read method'
     , path = path'
     , headers = headers'
-    , body = dropWhile isControl body'
+    , body = S.tail body'
     }

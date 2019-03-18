@@ -18,7 +18,7 @@ route Req.POST ["api", "path"] req =
     method' = show $ Req.method req
     path' = Req.path req
     headers' = show $ Req.headers req
-    body' = Req.body req
+    body' = BC.unpack (Req.body req)
   in
     respond $ "You sent a " ++ method' ++ " request to " ++ path' ++ " with headers: " ++ headers' ++ " and body: " ++ body'
 
