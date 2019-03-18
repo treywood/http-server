@@ -46,6 +46,9 @@ instance IsResponse S.ByteString where
     , body = str
     }
 
+instance IsResponse String where
+  respond str = respond (BC.pack str)
+
 instance (IsResponse a) => IsResponse (Maybe a) where
   respond (Just r) = respond r
   respond _ = Response

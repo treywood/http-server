@@ -19,24 +19,20 @@ route Req.POST ["api", "path"] req =
     path' = Req.path req
     headers' = show $ Req.headers req
     body' = Req.body req
-    msg = "You sent a " ++ method' ++ " request to " ++ path' ++ " with headers: " ++ headers' ++ " and body: " ++ body'
   in
-    respond (BC.pack msg)
+    respond $ "You sent a " ++ method' ++ " request to " ++ path' ++ " with headers: " ++ headers' ++ " and body: " ++ body'
 
 route Req.GET ["api", "greet", name] req =
   let
     it = if (name == "kyle") then
       Nothing
     else
-      Just (BC.pack $ "hello " ++ name)
+      Just ("hello " ++ name)
   in
     respond it
 
-route _ _ _ = Response
-  { status = 404
-  , headers = [("Content-Type", "text/plain")]
-  , body = BC.pack "Not Found"
-  }
+route _ _ _ =
+  respond (Nothing :: Maybe String)
 
 handleRequest :: S.ByteString -> S.ByteString
 handleRequest msg =
