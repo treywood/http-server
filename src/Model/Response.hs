@@ -17,6 +17,7 @@ data Response = Response { status :: Int, headers :: Headers, body :: S.ByteStri
 
 serializeCode :: Int -> String
 serializeCode 200 = "200 OK"
+serializeCode 404 = "404 Not Found"
 serializeCode c = show c
 
 serializeResponse :: Response -> S.ByteString

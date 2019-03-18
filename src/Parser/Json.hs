@@ -17,7 +17,7 @@ parseArray = parseArray' []
     parseArray' es = do
       maybeC <- peek
       case maybeC of
-        Just ']'      -> return $ Right es
+        Just ']'      -> chomp >> (return $ Right es)
         Just ','
           | null es   -> return $ Left "unexpected ','"
           | otherwise -> chomp >> next es
@@ -41,7 +41,7 @@ parseObject = parseObject' []
     parseObject' fs = do
       maybeC <- peek
       case maybeC of
-        Just '}'      -> return $ Right fs
+        Just '}'      -> chomp >> (return $ Right fs)
         Just ','
           | null fs   -> return $ Left "unexpected ','"
           | otherwise -> chomp >> next fs
@@ -55,7 +55,7 @@ parseObject = parseObject' []
       chompWhile isSeparator
       parsedName <- parseFieldName
       case parsedName of
-        Left err  -> return $ Left err
+        Left err   -> return $ Left err
         Right name -> do
           result <- parseJson'
           case result of
