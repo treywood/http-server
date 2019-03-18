@@ -3,7 +3,7 @@
 module Model.Response
  ( Response(..)
  , serialize
- , IsResponse(..)
+ , Respond(..)
  ) where
 
 import qualified Model.Headers as H
@@ -33,23 +33,23 @@ serialize res =
 
 -- IsResponse
 
-class IsResponse a where
+class Respond a where
   respond :: a -> Response
 
-instance IsResponse Response where
+instance Respond Response where
   respond r = r
 
-instance IsResponse S.ByteString where
+instance Respond S.ByteString where
   respond str = Response
     { status = 200
     , headers = [("Content-Type", "text/plain")]
     , body = str
     }
 
-instance IsResponse String where
+instance Respond String where
   respond str = respond (BC.pack str)
 
-instance (IsResponse a) => IsResponse (Maybe a) where
+instance (Respond a) => Respond (Maybe a) where
   respond (Just r) = respond r
   respond _ = Response
     { status = 404
