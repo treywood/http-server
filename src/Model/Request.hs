@@ -1,5 +1,5 @@
 module Model.Request
- ( Method
+ ( Method(..)
  , Request(..)
  ) where
 
