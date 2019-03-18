@@ -5,6 +5,7 @@ module Lib
 import Parser.Request
 import qualified Model.Request as Req
 import Model.Response
+import qualified Model.Json as Json
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as BC
@@ -30,6 +31,9 @@ route Req.GET ["api", "greet", name] req =
       Just ("hello " ++ name)
   in
     respond it
+
+route Req.GET ["api", "json"] _ =
+  respond $ Json.JsonObject [("name", Json.JsonString "Trey"), ("age", Json.JsonInt 30)]
 
 route _ _ _ =
   respond (Nothing :: Maybe String)

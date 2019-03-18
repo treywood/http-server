@@ -7,7 +7,7 @@ module Model.Response
  ) where
 
 import qualified Model.Headers as H
-
+import qualified Model.Json as J
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as BC
 import Data.List
@@ -55,4 +55,11 @@ instance (Respond a) => Respond (Maybe a) where
     { status = 404
     , headers = [("Content-Type", "text/plain")]
     , body = BC.pack "Not Found"
+    }
+
+instance Respond J.Json where
+  respond json = Response
+    { status = 200
+    , headers = [("Content-Type", "application/json")]
+    , body = BC.pack $ J.serialize json
     }

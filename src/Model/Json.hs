@@ -19,4 +19,4 @@ serialize (JsonArray arr) = "[" ++ (intercalate "," $ map serialize arr) ++ "]"
 serialize (JsonObject fields) = "{" ++ (intercalate "," $ map fmt fields) ++ "}"
   where
     fmt :: JsonField -> String
-    fmt (name, val) = name ++ ":" ++ (serialize val)
+    fmt (name, val) = "\"" ++ name ++ "\":" ++ (serialize val)

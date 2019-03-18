@@ -16,7 +16,7 @@ parseArray = parseArray' []
     parseArray' es = do
       json <- parseJson'
       chompWhile isSeparator
-      
+
       maybeC <- peek
       case maybeC of
         Just ',' -> do
