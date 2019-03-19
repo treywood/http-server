@@ -60,7 +60,7 @@ handleRequest :: S.ByteString -> S.ByteString
 handleRequest msg =
   let
     req = parseRequest msg
-    pathParts = tail $ splitOn "/" (Req.path req)
+    pathParts = [ p | p <- splitOn "/" (Req.path req), not (null p) ]
     res = route (Req.method req) pathParts req
   in
     serializeResponse res
