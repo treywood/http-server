@@ -15,17 +15,20 @@ import Data.List
 
 data Response = Response { status :: Int, headers :: Headers, body :: S.ByteString }
 
-serializeCode :: Int -> String
-serializeCode 200 = "200 OK"
-serializeCode 404 = "404 Not Found"
-serializeCode c = show c
+statusDescription :: Int -> String
+statusDescription 200 = "OK"
+statusDescription 201 = "Created"
+statusDescription 204 = "No Content"
+statusDescription 400 = "Bad Request"
+statusDescription 404 = "Not Found"
+statusDescription _ = ""
 
 serializeResponse :: Response -> S.ByteString
 serializeResponse res =
   let
     len = S.length (body res)
     head = BC.unlines $ map BC.pack
-      [ "HTTP/1.1 " ++ serializeCode (status res)
+      [ "HTTP/1.1 " ++ (show $ status res) ++ " " ++ (statusDescription $ status res)
       , serializeHeaders (headers res)
       , "Content-Length: " ++ (show $ len)
       , ""
@@ -64,4 +67,11 @@ instance Respond Json where
     { status = 200
     , headers = [("Content-Type", "application/json")]
     , body = BC.pack $ serializeJson json
+    }
+
+instance Respond () where
+  respond () = Response
+    { status = 204
+    , headers = []
+    , body = BC.empty
     }

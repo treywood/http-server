@@ -3,6 +3,7 @@ module Lib
     ) where
 
 import Parser.Request
+import Parser.Json
 import qualified Model.Request as Req
 import Model.Response
 import Model.Json
@@ -35,8 +36,25 @@ route Req.GET ["api", "greet", name] req =
 route Req.GET ["api", "json"] _ =
   respond $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
 
+route Req.POST ["api", "json"] req =
+  case parseJson (Req.body req) of
+    Right json ->
+      case get "name" json of
+        Just (JsonString name) -> respond $ "Your name is " ++ name
+        Just v                 -> respond $ "Your name is weird: (" ++ (show v) ++ ")"
+        _                      -> respond $ "You don't have a name I guess"
+
+    Left err -> Response
+      { status = 400
+      , headers = [("Content-Type", "text/plain")]
+      , body = BC.pack $ "Bad JSON: " ++ err
+      }
+
+route Req.GET [] _ =
+  respond ()
+
 route _ _ _ =
-  respond (Nothing :: Maybe String)
+  respond (Nothing :: Maybe ())
 
 handleRequest :: S.ByteString -> S.ByteString
 handleRequest msg =

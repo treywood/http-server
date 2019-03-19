@@ -2,6 +2,7 @@ module Model.Json
  ( Json(..)
  , JsonField
  , serializeJson
+ , get
  ) where
 
 import Data.List
@@ -20,3 +21,11 @@ serializeJson (JsonObject fields) = "{" ++ (intercalate "," $ map fmt fields) ++
   where
     fmt :: JsonField -> String
     fmt (name, val) = "\"" ++ name ++ "\":" ++ (serializeJson val)
+
+get :: String -> Json -> (Maybe Json)
+get field (JsonObject fields) =
+  case [ v | (k, v) <- fields, k == field ] of
+    (x : _) -> Just x
+    _       -> Nothing
+
+get _ _ = Nothing
