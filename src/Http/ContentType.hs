@@ -1,3 +1,3 @@
-module Model.ContentType where
+module Http.ContentType where
 
 data ContentType = Json | Text

@@ -1,9 +1,9 @@
-module Model.Request
+module Http.Request
  ( Method(..)
  , Request(..)
  ) where
 
-import Model.Headers as H
+import Http.Headers as H
 import qualified Data.ByteString as S
 
 data Method = HEAD | OPTIONS | GET | POST | PUT | DELETE deriving (Show, Read)

@@ -1,43 +1,56 @@
 -- Echo server program
 module Main (main) where
 
-import Control.Concurrent (forkFinally)
-import qualified Control.Exception as E
-import Control.Monad (unless, forever, void)
-import qualified Data.ByteString as S
-import Network.Socket
-import Network.Socket.ByteString (recv, sendAll)
+import Http.Json.Parser
+import qualified Http.Request as Req
+import Http.Response
+import Http.Json
+import Http.Server
 
-import Lib
+import qualified Data.ByteString.Char8 as BC
+
+
+route :: Req.Method -> [String] -> Req.Request -> Response
+route Req.POST ["api", "path"] req =
+  let
+    method' = show $ Req.method req
+    path' = Req.path req
+    headers' = show $ Req.headers req
+    body' = BC.unpack (Req.body req)
+  in
+    respond $ "You sent a " ++ method' ++ " request to " ++ path' ++ " with headers: " ++ headers' ++ " and body: " ++ body'
+
+route Req.GET ["api", "greet", name] req =
+  let
+    it = if (name == "kyle") then
+      Nothing
+    else
+      Just ("hello " ++ name)
+  in
+    respond it
+
+route Req.GET ["api", "json"] _ =
+  respond $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
+
+route Req.POST ["api", "json"] req =
+  case parseJson (Req.body req) of
+    Right json ->
+      case get "name" json of
+        Just (JsonString name) -> respond $ "Your name is " ++ name
+        Just v                 -> respond $ "Your name is weird: (" ++ (show v) ++ ")"
+        _                      -> respond $ "You don't have a name I guess"
+
+    Left err -> Response
+      { status = 400
+      , headers = [("Content-Type", "text/plain")]
+      , body = BC.pack $ "Bad JSON: " ++ err
+      }
+
+route Req.GET [] _ =
+  respond ()
+
+route _ _ _ =
+  respond (Nothing :: Maybe ())
 
 main :: IO ()
-main = withSocketsDo $ do
-    addr <- resolve "3000"
-    E.bracket (open addr) close loop
-  where
-    resolve port = do
-        let hints = defaultHints {
-                addrFlags = [AI_PASSIVE]
-              , addrSocketType = Stream
-              }
-        addr:_ <- getAddrInfo (Just hints) Nothing (Just port)
-        return addr
-    open addr = do
-        sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
-        setSocketOption sock ReuseAddr 1
-        -- If the prefork technique is not used,
-        -- set CloseOnExec for the security reasons.
-        fd <- fdSocket sock
-        setCloseOnExecIfNeeded fd
-        bind sock (addrAddress addr)
-        listen sock 10
-        return sock
-    loop sock = forever $ do
-        (conn, peer) <- accept sock
-        putStrLn $ "Connection from " ++ show peer
-        void $ forkFinally (talk conn) (\_ -> close conn)
-    talk conn = do
-        msg <- recv conn 1024
-        unless (S.null msg) $ do
-          sendAll conn (handleRequest msg)
-          close conn
+main = startServer $ defaultOptions { routes = route }

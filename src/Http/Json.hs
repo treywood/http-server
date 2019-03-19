@@ -1,4 +1,4 @@
-module Model.Json
+module Http.Json
  ( Json(..)
  , JsonField
  , serializeJson

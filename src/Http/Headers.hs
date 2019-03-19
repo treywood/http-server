@@ -1,4 +1,4 @@
-module Model.Headers
+module Http.Headers
  ( Headers
  , serializeHeaders
  ) where

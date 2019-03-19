@@ -3,7 +3,7 @@ module Specs.Json (jsonTests) where
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Parser.Json
+import Parser.Parser
 import Model.Json
 
 import qualified Data.ByteString.Char8 as BC

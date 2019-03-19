@@ -1,13 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Model.Response
+module Http.Response
  ( Response(..)
  , serializeResponse
  , Respond(..)
  ) where
 
-import Model.Headers
-import Model.Json
+import Http.Headers
+import Http.Json
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as BC

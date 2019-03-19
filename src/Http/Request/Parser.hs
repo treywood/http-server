@@ -1,10 +1,10 @@
-module Parser.Request
+module Http.Request.Parser
  ( parseRequest
  ) where
 
 import Parser
-import Model.Request
-import Model.Headers
+import Http.Request
+import Http.Headers
 import qualified Data.ByteString as S
 import Data.List
 import Data.Char

@@ -1,8 +1,8 @@
-module Parser.Json
+module Http.Json.Parser
  ( parseJson
  ) where
 
-import Model.Json
+import Http.Json
 
 import Parser
 import qualified Data.ByteString as S
