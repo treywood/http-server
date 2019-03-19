@@ -8,7 +8,7 @@ module Model.Json
 import Data.List
 
 type JsonField = (String, Json)
-data Json = JsonInt Int | JsonString String | JsonBool Bool | JsonArray [Json] | JsonNull | JsonObject [JsonField] deriving (Show)
+data Json = JsonInt Int | JsonString String | JsonBool Bool | JsonArray [Json] | JsonNull | JsonObject [JsonField] deriving (Show, Eq)
 
 serializeJson :: Json -> String
 serializeJson (JsonInt i) = show i

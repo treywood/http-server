@@ -50,3 +50,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - http-server
+    - tasty
+    - tasty-hunit

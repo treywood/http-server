@@ -21,15 +21,14 @@ parseArray = parseArray' []
         Just ','
           | null es   -> return $ Left "unexpected ','"
           | otherwise -> chomp >> next es
-
         Nothing -> return $ Left "unexpected end of input"
-
         _ -> next es
 
     next :: [Json] -> State S.ByteString (Either String [Json])
     next es = do
       chompWhile isSeparator
       result <- parseJson'
+      chompWhile isSeparator
       case result of
         Left err    -> return $ Left err
         Right json  -> parseArray' (es ++ [json])
@@ -45,9 +44,7 @@ parseObject = parseObject' []
         Just ','
           | null fs   -> return $ Left "unexpected ','"
           | otherwise -> chomp >> next fs
-
         Nothing -> return $ Left "unexpected end of input"
-
         _ -> next fs
 
     next :: [JsonField] -> State S.ByteString (Either String [JsonField])
@@ -58,6 +55,7 @@ parseObject = parseObject' []
         Left err   -> return $ Left err
         Right name -> do
           result <- parseJson'
+          chompWhile isSeparator
           case result of
             Left err    -> return $ Left err
             Right value -> parseObject' (fs ++ [(name, value)])
