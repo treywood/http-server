@@ -8,9 +8,12 @@ import Http.Json
 import Http.Server
 
 import qualified Data.ByteString.Char8 as BC
+import System.IO
+import Control.Monad
+import Data.List
 
 
-route :: Req.Method -> [String] -> Req.Request -> Response
+route :: Routes
 route Req.POST ["api", "path"] req =
   let
     method' = show $ Req.method req
@@ -40,17 +43,39 @@ route Req.POST ["api", "json"] req =
         Just v                 -> respond $ "Your name is weird: (" ++ (show v) ++ ")"
         _                      -> respond $ "You don't have a name I guess"
 
-    Left err -> Response
-      { status = 400
-      , headers = [("Content-Type", "text/plain")]
-      , body = BC.pack $ "Bad JSON: " ++ err
+    Left err -> return $
+      Response
+        { status = 400
+        , headers = [("Content-Type", "text/plain")]
+        , body = BC.pack $ "Bad JSON: " ++ err
+        }
+
+route _ ("api" : _) _ =
+  respond (Nothing :: Maybe ())
+
+route Req.GET ("assets" : path) _
+  | null path = respond (Nothing :: Maybe ())
+  | otherwise = respond $ do
+      let fullPath = "target/" ++ (intercalate "/" path)
+      putStrLn $ "getting " ++ fullPath
+      handle <- openFile fullPath ReadMode
+      contents <- hGetContents handle
+      return $ Response
+        { status = 200
+        , headers = [("Content-Type", "application/javascript")]
+        , body = BC.pack contents
+        }
+
+route Req.GET _ _ =
+  respond $ do
+    handle <- openFile "target/index.html" ReadMode
+    contents <- hGetContents handle
+    return $ Response
+      { status = 200
+      , headers = [("Content-Type", "text/html")]
+      , body = BC.pack contents
       }
 
-route Req.GET [] _ =
-  respond ()
-
-route _ _ _ =
-  respond (Nothing :: Maybe ())
 
 main :: IO ()
 main = startServer $ defaultOptions { routes = route }

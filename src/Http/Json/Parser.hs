@@ -3,8 +3,8 @@ module Http.Json.Parser
  ) where
 
 import Http.Json
+import Http.Parser
 
-import Parser
 import qualified Data.ByteString as S
 import Control.Monad.State
 import Data.Char

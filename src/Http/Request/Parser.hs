@@ -2,7 +2,7 @@ module Http.Request.Parser
  ( parseRequest
  ) where
 
-import Parser
+import Http.Parser
 import Http.Request
 import Http.Headers
 import qualified Data.ByteString as S

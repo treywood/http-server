@@ -39,39 +39,48 @@ serializeResponse res =
 -- IsResponse
 
 class Respond a where
-  respond :: a -> Response
+  respond :: a -> IO Response
 
 instance Respond Response where
-  respond r = r
+  respond r = return r
 
 instance Respond S.ByteString where
-  respond str = Response
-    { status = 200
-    , headers = [("Content-Type", "text/plain")]
-    , body = str
-    }
+  respond str = return $
+    Response
+      { status = 200
+      , headers = [("Content-Type", "text/plain")]
+      , body = str
+      }
 
 instance Respond String where
   respond str = respond (BC.pack str)
 
 instance (Respond a) => Respond (Maybe a) where
   respond (Just r) = respond r
-  respond _ = Response
-    { status = 404
-    , headers = [("Content-Type", "text/plain")]
-    , body = BC.pack "Not Found"
-    }
+  respond _ = return $
+    Response
+      { status = 404
+      , headers = [("Content-Type", "text/plain")]
+      , body = BC.pack "Not Found"
+      }
 
 instance Respond Json where
-  respond json = Response
-    { status = 200
-    , headers = [("Content-Type", "application/json")]
-    , body = BC.pack $ serializeJson json
-    }
+  respond json = return $
+    Response
+      { status = 200
+      , headers = [("Content-Type", "application/json")]
+      , body = BC.pack $ serializeJson json
+      }
 
 instance Respond () where
-  respond () = Response
-    { status = 204
-    , headers = []
-    , body = BC.empty
-    }
+  respond () = return $
+    Response
+      { status = 204
+      , headers = []
+      , body = BC.empty
+      }
+
+instance (Respond a) => Respond (IO a) where
+  respond io = do
+    res <- io
+    respond res

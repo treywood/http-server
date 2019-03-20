@@ -1,4 +1,4 @@
-module Parser
+module Http.Parser
  ( chomp
  , chompUntil
  , chompWord

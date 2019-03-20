@@ -18,7 +18,7 @@ import Http.Request as Req
 import Http.Request.Parser
 import Http.Response
 
-type Routes = Req.Method -> [String] -> Req.Request -> Response
+type Routes = Req.Method -> [String] -> Req.Request -> IO Response
 data ServerOptions = ServerOptions { port :: Int, routes :: Routes }
 
 defaultOptions = ServerOptions
@@ -55,14 +55,13 @@ startServer opts = withSocketsDo $ do
     talk conn = do
         msg <- recv conn 1024
         unless (S.null msg) $ do
-          sendAll conn (handleRequest msg (routes opts))
+          response <- handleRequest msg (routes opts)
+          sendAll conn response
           close conn
 
-handleRequest :: S.ByteString -> Routes -> S.ByteString
-handleRequest msg routes =
-  let
-    req = parseRequest msg
-    pathParts = [ p | p <- splitOn "/" (Req.path req), not (null p) ]
-    res = routes (Req.method req) pathParts req
-  in
-    serializeResponse res
+handleRequest :: S.ByteString -> Routes -> IO S.ByteString
+handleRequest msg routes = do
+  let req = parseRequest msg
+  let pathParts = [ p | p <- splitOn "/" (Req.path req), not (null p) ]
+  res <- routes (Req.method req) pathParts req
+  return $ serializeResponse res
