@@ -39,48 +39,50 @@ serializeResponse res =
 -- IsResponse
 
 class Respond a where
+  toResponse :: a -> Response
+
   respond :: a -> IO Response
+  respond a = return $ toResponse a
 
 instance Respond Response where
-  respond r = return r
+  toResponse r = r
 
 instance Respond S.ByteString where
-  respond str = return $
-    Response
-      { status = 200
-      , headers = [("Content-Type", "text/plain")]
-      , body = str
-      }
+  toResponse str = Response
+    { status = 200
+    , headers = [("Content-Type", "text/plain")]
+    , body = str
+    }
 
 instance Respond String where
-  respond str = respond (BC.pack str)
+  toResponse str = toResponse (BC.pack str)
 
 instance (Respond a) => Respond (Maybe a) where
-  respond (Just r) = respond r
-  respond _ = return $
-    Response
-      { status = 404
-      , headers = [("Content-Type", "text/plain")]
-      , body = BC.pack "Not Found"
-      }
+  toResponse (Just r) = toResponse r
+  toResponse _ = Response
+    { status = 404
+    , headers = [("Content-Type", "text/plain")]
+    , body = BC.pack "Not Found"
+    }
 
 instance Respond Json where
-  respond json = return $
-    Response
-      { status = 200
-      , headers = [("Content-Type", "application/json")]
-      , body = BC.pack $ serializeJson json
-      }
+  toResponse json = Response
+    { status = 200
+    , headers = [("Content-Type", "application/json")]
+    , body = BC.pack $ serializeJson json
+    }
 
 instance Respond () where
-  respond () = return $
-    Response
-      { status = 204
-      , headers = []
-      , body = BC.empty
-      }
+  toResponse () = Response
+    { status = 204
+    , headers = []
+    , body = BC.empty
+    }
 
 instance (Respond a) => Respond (IO a) where
+  -- implementation isn't used
+  toResponse _ = Response { status = 404, headers = [], body = BC.empty }
+
   respond io = do
     res <- io
     respond res
