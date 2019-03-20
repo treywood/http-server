@@ -3,6 +3,7 @@
 module Http.Response
  ( Response(..)
  , serializeResponse
+ , notFoundResponse
  , Respond(..)
  ) where
 
@@ -35,6 +36,12 @@ serializeResponse res =
       ]
   in
     BC.append head (body res)
+
+notFoundResponse = Response
+  { status = 404
+  , headers = [("Content-Type", "text/plain")]
+  , body = BC.pack $ "Not Found"
+  }
 
 -- IsResponse
 

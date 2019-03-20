@@ -9,6 +9,7 @@ import Http.Server
 
 import qualified Data.ByteString.Char8 as BC
 import System.IO
+import Control.Concurrent
 import Control.Monad
 import Data.List
 
@@ -33,7 +34,9 @@ route Req.GET ["api", "greet", name] req =
     respond it
 
 route Req.GET ["api", "json"] _ =
-  respond $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
+  respond $ do
+    threadDelay 2500000
+    return $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
 
 route Req.POST ["api", "json"] req =
   case parseJson (Req.body req) of
@@ -51,15 +54,14 @@ route Req.POST ["api", "json"] req =
         }
 
 route _ ("api" : _) _ =
-  respond (Nothing :: Maybe ())
+  respond notFoundResponse
 
 route Req.GET ("assets" : path) _
-  | null path = respond (Nothing :: Maybe ())
+  | null path = respond notFoundResponse
   | otherwise = respond $ do
       let fullPath = "target/" ++ (intercalate "/" path)
       putStrLn $ "getting " ++ fullPath
-      handle <- openFile fullPath ReadMode
-      contents <- hGetContents handle
+      contents <- readFile fullPath
       return $ Response
         { status = 200
         , headers = [("Content-Type", "application/javascript")]
@@ -68,8 +70,7 @@ route Req.GET ("assets" : path) _
 
 route Req.GET _ _ =
   respond $ do
-    handle <- openFile "target/index.html" ReadMode
-    contents <- hGetContents handle
+    contents <- readFile "target/index.html"
     return $ Response
       { status = 200
       , headers = [("Content-Type", "text/html")]
