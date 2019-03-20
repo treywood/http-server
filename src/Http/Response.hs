@@ -46,16 +46,18 @@ notFoundResponse = Response
 -- IsResponse
 
 class Respond a where
-  toResponse :: a -> Response
+  toResponse :: a -> Maybe Response
 
   respond :: a -> IO Response
-  respond a = return $ toResponse a
+  respond a = case toResponse a of
+    Just r  -> return r
+    _       -> return notFoundResponse
 
 instance Respond Response where
-  toResponse r = r
+  toResponse r = Just r
 
 instance Respond S.ByteString where
-  toResponse str = Response
+  toResponse str = Just $ Response
     { status = 200
     , headers = [("Content-Type", "text/plain")]
     , body = str
@@ -65,31 +67,22 @@ instance Respond String where
   toResponse str = toResponse (BC.pack str)
 
 instance (Respond a) => Respond (Maybe a) where
-  toResponse (Just r) = toResponse r
-  toResponse _ = Response
-    { status = 404
-    , headers = [("Content-Type", "text/plain")]
-    , body = BC.pack "Not Found"
-    }
+  toResponse r = r >>= toResponse
 
 instance Respond Json where
-  toResponse json = Response
+  toResponse json = Just $ Response
     { status = 200
     , headers = [("Content-Type", "application/json")]
     , body = BC.pack $ serializeJson json
     }
 
 instance Respond () where
-  toResponse () = Response
+  toResponse () = Just $ Response
     { status = 204
     , headers = []
     , body = BC.empty
     }
 
 instance (Respond a) => Respond (IO a) where
-  -- implementation isn't used
-  toResponse _ = Response { status = 404, headers = [], body = BC.empty }
-
-  respond io = do
-    res <- io
-    respond res
+  toResponse _ = Nothing -- implementation isn't used
+  respond io = io >>= respond

@@ -58,20 +58,19 @@ route _ ("api" : _) _ =
 
 route Req.GET ("assets" : path) _
   | null path = respond notFoundResponse
-  | otherwise = respond $ do
+  | otherwise = do
       let fullPath = "target/" ++ (intercalate "/" path)
       putStrLn $ "getting " ++ fullPath
       contents <- readFile fullPath
-      return $ Response
+      respond $ Response
         { status = 200
         , headers = [("Content-Type", "application/javascript")]
         , body = BC.pack contents
         }
 
-route Req.GET _ _ =
-  respond $ do
+route Req.GET _ _ = do
     contents <- readFile "target/index.html"
-    return $ Response
+    respond $ Response
       { status = 200
       , headers = [("Content-Type", "text/html")]
       , body = BC.pack contents
