@@ -56,25 +56,11 @@ route Req.POST ["api", "json"] req =
 route _ ("api" : _) _ =
   respond notFoundResponse
 
-route Req.GET ("assets" : path) _
-  | null path = respond notFoundResponse
-  | otherwise = do
-      let fullPath = "target/" ++ (intercalate "/" path)
-      putStrLn $ "getting " ++ fullPath
-      contents <- readFile fullPath
-      respond $ Response
-        { status = 200
-        , headers = [("Content-Type", "application/javascript")]
-        , body = BC.pack contents
-        }
+route Req.GET ("assets" : path) _ =
+  static "target" (intercalate "/" path)
 
-route Req.GET _ _ = do
-    contents <- readFile "target/index.html"
-    respond $ Response
-      { status = 200
-      , headers = [("Content-Type", "text/html")]
-      , body = BC.pack contents
-      }
+route Req.GET _ _ =
+  sendFile "target/index.html"
 
 
 main :: IO ()

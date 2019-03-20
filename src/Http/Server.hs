@@ -3,6 +3,8 @@ module Http.Server
     , ServerOptions(..)
     , defaultOptions
     , Routes
+    , static
+    , sendFile
     ) where
 
 import Control.Concurrent (forkFinally)
@@ -13,8 +15,10 @@ import Network.Socket
 import Network.Socket.ByteString (recv, sendAll)
 import Data.List
 import Data.List.Split
+import qualified Data.ByteString.Char8 as BC
+import System.IO
 
-import Http.Request as Req
+import qualified Http.Request as Req
 import Http.Request.Parser
 import Http.Response
 
@@ -58,6 +62,27 @@ startServer opts = withSocketsDo $ do
           response <- handleRequest msg (routes opts)
           sendAll conn response
           close conn
+
+contentTypeForExt :: String -> String
+contentTypeForExt "js"    = "application/javascript"
+contentTypeForExt "html"  = "text/html"
+contentTypeForExt "png"   = "img/png"
+contentTypeForExt _       = "text/plain"
+
+sendFile :: String -> IO Response
+sendFile path = do
+  let ext = last $ splitOn "." path
+  contents <- readFile path
+  return $ Response
+    { status = 200
+    , headers = [("Content-Type", contentTypeForExt ext)]
+    , body = BC.pack contents
+    }
+
+static :: String -> String -> IO Response
+static dir filePath = do
+  let fullPath = dir ++ "/" ++ filePath
+  sendFile fullPath
 
 handleRequest :: S.ByteString -> Routes -> IO S.ByteString
 handleRequest msg routes = do
