@@ -44,6 +44,41 @@ init _ url key =
     )
 
 
+locationChange : Url -> Model -> ( Model, Cmd Msg )
+locationChange url model =
+    let
+        newRoute =
+            fromUrl url
+
+        newModel =
+            { model | route = newRoute }
+    in
+    case newRoute of
+        _ ->
+            ( newModel, Cmd.none )
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        UrlChange url ->
+            locationChange url model
+
+        UrlRequest req ->
+            case req of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        DoFetch ->
+            ( { model | person = Loading }, fetchName )
+
+        Update person ->
+            ( { model | person = person }, Cmd.none )
+
+
 personDecoder : D.Decoder Person
 personDecoder =
     D.succeed Person
@@ -85,41 +120,6 @@ view model =
 
         NotFoundRoute ->
             div [] [ text "There's nothing here" ]
-
-
-locationChange : Url -> Model -> ( Model, Cmd Msg )
-locationChange url model =
-    let
-        newRoute =
-            fromUrl url
-
-        newModel =
-            { model | route = newRoute }
-    in
-    case newRoute of
-        _ ->
-            ( newModel, Cmd.none )
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        DoFetch ->
-            ( { model | person = Loading }, fetchName )
-
-        Update person ->
-            ( { model | person = person }, Cmd.none )
-
-        UrlChange url ->
-            locationChange url model
-
-        UrlRequest req ->
-            case req of
-                Browser.Internal url ->
-                    ( model, Nav.pushUrl model.key (Url.toString url) )
-
-                Browser.External href ->
-                    ( model, Nav.load href )
 
 
 main : Program (Maybe Bool) Model Msg

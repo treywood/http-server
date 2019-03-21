@@ -5,7 +5,7 @@ module Http.Request.Parser
 import Http.Parser
 import Http.Request
 import Http.Headers
-import qualified Data.ByteString as S
+import qualified Data.ByteString.Lazy as S
 import Data.List
 import Data.Char
 

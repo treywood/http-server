@@ -25,6 +25,7 @@ dependencies:
 - bytestring
 - split
 - mtl
+- zlib
 
 library:
   source-dirs: src

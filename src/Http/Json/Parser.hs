@@ -5,7 +5,7 @@ module Http.Json.Parser
 import Http.Json
 import Http.Parser
 
-import qualified Data.ByteString as S
+import qualified Data.ByteString.Lazy as S
 import Control.Monad.State
 import Data.Char
 import Data.List

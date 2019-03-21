@@ -10,13 +10,14 @@ module Http.Server
 import Control.Concurrent (forkFinally)
 import qualified Control.Exception as E
 import Control.Monad (unless, forever, void)
-import qualified Data.ByteString as S
-import Network.Socket
-import Network.Socket.ByteString (recv, sendAll)
 import Data.List
 import Data.List.Split
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy as S
+import qualified Data.ByteString.Lazy.Char8 as BC
+import Network.Socket
+import Network.Socket.ByteString (recv, sendAll)
 import System.IO
+import System.IO.Error
 
 import qualified Http.Request as Req
 import Http.Request.Parser
@@ -51,33 +52,41 @@ startServer opts = withSocketsDo $ do
         setCloseOnExecIfNeeded fd
         bind sock (addrAddress addr)
         listen sock 10
+        putStrLn $ "Listening at " ++ show (addrAddress addr)
         return sock
     loop sock = forever $ do
         (conn, peer) <- accept sock
         putStrLn $ "Connection from " ++ show peer
         void $ forkFinally (talk conn) (\_ -> close conn)
     talk conn = do
-        msg <- recv conn 1024
+        msg <- fmap S.fromStrict (recv conn 1024)
         unless (S.null msg) $ do
           response <- handleRequest msg (routes opts)
-          sendAll conn response
+          sendAll conn (S.toStrict response)
           close conn
 
 contentTypeForExt :: String -> String
 contentTypeForExt "js"    = "application/javascript"
 contentTypeForExt "html"  = "text/html"
 contentTypeForExt "png"   = "img/png"
+contentTypeForExt "jpg"   = "img/jpg"
+contentTypeForExt "css"   = "text/css"
 contentTypeForExt _       = "text/plain"
 
 sendFile :: String -> IO Response
 sendFile path = do
   let ext = last $ splitOn "." path
-  contents <- readFile path
-  return $ Response
-    { status = 200
-    , headers = [("Content-Type", contentTypeForExt ext)]
-    , body = BC.pack contents
-    }
+  result <- E.try $ readFile path
+  case result of
+    Right contents ->
+      return $ response
+        { headers = [("Content-Type", contentTypeForExt ext)]
+        , body = BC.pack contents
+        , gzip = True
+        }
+    Left err
+      | isDoesNotExistError err -> return notFoundResponse
+      | otherwise               -> respond (500, E.displayException err)
 
 static :: String -> String -> IO Response
 static dir filePath = do

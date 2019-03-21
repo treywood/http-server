@@ -9,8 +9,8 @@ module Http.Parser
  , peek
  ) where
 
-import qualified Data.ByteString as S
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy as S
+import qualified Data.ByteString.Lazy.Char8 as BC
 import Data.List
 import Data.Char
 import Control.Monad.State

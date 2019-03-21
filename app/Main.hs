@@ -7,7 +7,7 @@ import Http.Response
 import Http.Json
 import Http.Server
 
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy.Char8 as BC
 import System.IO
 import Control.Concurrent
 import Control.Monad
@@ -46,12 +46,8 @@ route Req.POST ["api", "json"] req =
         Just v                 -> respond $ "Your name is weird: (" ++ (show v) ++ ")"
         _                      -> respond $ "You don't have a name I guess"
 
-    Left err -> return $
-      Response
-        { status = 400
-        , headers = [("Content-Type", "text/plain")]
-        , body = BC.pack $ "Bad JSON: " ++ err
-        }
+    Left err ->
+      respond $ (400, "Bad JSON: " ++ err)
 
 route _ ("api" : _) _ =
   respond notFoundResponse
