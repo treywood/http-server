@@ -96,6 +96,7 @@ static dir filePath = do
 handleRequest :: S.ByteString -> Routes -> IO S.ByteString
 handleRequest msg routes = do
   let req = parseRequest msg
+  putStrLn (show req)
   let pathParts = [ p | p <- splitOn "/" (Req.path req), not (null p) ]
   res <- routes (Req.method req) pathParts req
   return $ serializeResponse res

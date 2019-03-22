@@ -33,6 +33,14 @@ route Req.GET ["api", "greet", name] req =
   in
     respond it
 
+route Req.GET ["api", "msg"] req =
+  let
+    msg = Req.query "msg" req
+  in
+    case msg of
+      Just msg' -> respond $ JsonObject [("msg", JsonString msg')]
+      _         -> respond (400, "Send a message dangit")
+
 route Req.GET ["api", "json"] _ =
   respond $ do
     threadDelay 2500000

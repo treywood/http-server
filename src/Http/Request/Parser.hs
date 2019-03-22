@@ -5,9 +5,11 @@ module Http.Request.Parser
 import Http.Parser
 import Http.Request
 import Http.Headers
+import Http.QueryString
 import qualified Data.ByteString.Lazy as S
 import Data.List
 import Data.Char
+import Network.URI.Encode
 
 import Control.Monad.State
 
@@ -28,13 +30,36 @@ parseHeaders = parseHeaders' []
         in
           parseHeaders' (header:hs)
 
+parseQueryString :: State S.ByteString QueryString
+parseQueryString = do
+    maybeC <- peek
+    case maybeC of
+      Just '?' -> do
+        chomp
+        parseQueryString' []
+      _ -> return []
+  where
+    parseQueryString' :: QueryString -> State S.ByteString QueryString
+    parseQueryString' qs = do
+      pair <- chompUntil (\c -> c == '&' || isSeparator c)
+      chompIf (== '&')
+      if (null pair) then
+        return qs
+      else
+        let
+          name = takeWhile (/= '=') pair
+          value = tail $ dropWhile (/= '=') pair
+          param = (name, decode value)
+        in
+          parseQueryString' (param:qs)
+
 parseRequest :: S.ByteString -> Request
 parseRequest = evalState $ do
   method' <- chompWord
   chomp
 
-  path' <- chompWord
-  chomp
+  path' <- chompUntil (\c -> c == '?' || isSeparator c)
+  queryString' <- parseQueryString
 
   chompLine >> chomp
   headers' <- parseHeaders
@@ -43,5 +68,6 @@ parseRequest = evalState $ do
     { method = read method'
     , path = path'
     , headers = headers'
+    , queryString = queryString'
     , body = S.tail body'
     }

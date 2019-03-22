@@ -26,6 +26,7 @@ dependencies:
 - split
 - mtl
 - zlib
+- uri-encode
 
 library:
   source-dirs: src

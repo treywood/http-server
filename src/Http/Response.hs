@@ -6,6 +6,7 @@ module Http.Response
  , notFoundResponse
  , response
  , Respond(..)
+ , WithHeaders(..)
  ) where
 
 import Http.Headers
@@ -58,6 +59,9 @@ notFoundResponse = response
   , headers = [("Content-Type", "text/plain")]
   , body = BC.pack $ "Not Found"
   }
+
+instance WithHeaders Response where
+  getHeaders res = headers res
 
 -- Respond
 
