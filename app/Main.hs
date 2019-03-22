@@ -34,17 +34,14 @@ route Req.GET ["api", "greet", name] req =
     respond it
 
 route Req.GET ["api", "msg"] req =
-  let
-    msg = Req.query "msg" req
-  in
-    case msg of
-      Just msg' -> respond $ JsonObject [("msg", JsonString msg')]
-      _         -> respond (400, "Send a message dangit")
+  maybe
+    (respond (400, "Send a message dangit"))
+    (\m -> respond $ JsonObject [("msg", JsonString m)])
+    (Req.query "msg" req)
 
-route Req.GET ["api", "json"] _ =
-  respond $ do
+route Req.GET ["api", "json"] _ = do
     threadDelay 2500000
-    return $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
+    respond $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
 
 route Req.POST ["api", "json"] req =
   case parseJson (Req.body req) of

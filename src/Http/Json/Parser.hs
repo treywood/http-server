@@ -11,7 +11,16 @@ import Data.Char
 import Data.List
 
 parseArray :: State S.ByteString (Either String [Json])
-parseArray = parseArray' []
+parseArray = do
+    maybeC <- peek
+    case maybeC of
+      Just '[' -> do
+        chomp
+        parseArray' []
+      Just c ->
+        return $ Left ("Expected '[' got '" ++ [c] ++ "'")
+      _      ->
+        return $ Left "Expected '[' got end of input"
   where
     parseArray' :: [Json] -> State S.ByteString (Either String [Json])
     parseArray' es = do
@@ -34,7 +43,16 @@ parseArray = parseArray' []
         Right json  -> parseArray' (es ++ [json])
 
 parseObject :: State S.ByteString (Either String [JsonField])
-parseObject = parseObject' []
+parseObject = do
+    maybeC <- peek
+    case maybeC of
+      Just '{' -> do
+        chomp
+        parseObject' []
+      Just c ->
+        return $ Left ("Expected '{' got '" ++ [c] ++ "'")
+      _      ->
+        return $ Left "Expected '{' got end of input"
   where
     parseObject' :: [JsonField] -> State S.ByteString (Either String [JsonField])
     parseObject' fs = do
@@ -84,14 +102,12 @@ parseJson' = do
        return $ Right (JsonString word)
 
      Just '[' -> do
-       chomp >> (chompWhile isSeparator)
        result <- parseArray
        case result of
         Right elems -> return $ Right (JsonArray elems)
         Left err    -> return $ Left err
 
      Just '{' -> do
-      chomp >> (chompWhile isSeparator)
       result <- parseObject
       case result of
         Right fields -> return $ Right (JsonObject fields)

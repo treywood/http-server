@@ -3,10 +3,10 @@ module Specs.Json (jsonTests) where
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Parser.Parser
-import Model.Json
+import Http.Json.Parser
+import Http.Json
 
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy.Char8 as BC
 
 jsonTests :: TestTree
 jsonTests = testGroup "Json"

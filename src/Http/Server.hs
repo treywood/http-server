@@ -16,7 +16,6 @@ import qualified Data.ByteString.Lazy as S
 import qualified Data.ByteString.Lazy.Char8 as BC
 import Network.Socket
 import Network.Socket.ByteString (recv, sendAll)
-import System.IO
 import System.IO.Error
 
 import qualified Http.Request as Req
@@ -76,12 +75,12 @@ contentTypeForExt _       = "text/plain"
 sendFile :: String -> IO Response
 sendFile path = do
   let ext = last $ splitOn "." path
-  result <- E.try $ readFile path
+  result <- E.try $ S.readFile path
   case result of
     Right contents ->
       return $ response
         { headers = [("Content-Type", contentTypeForExt ext)]
-        , body = BC.pack contents
+        , body = contents
         , gzip = True
         }
     Left err
