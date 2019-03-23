@@ -37,7 +37,7 @@ route Req.GET ["api", "msg"] req =
   maybe
     (respond (400, "Send a message dangit"))
     (\m -> respond $ JsonObject [("msg", JsonString m)])
-    (Req.query "msg" req)
+    (Req.param "msg" req)
 
 route Req.GET ["api", "json"] _ = do
     threadDelay 2500000

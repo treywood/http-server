@@ -27,6 +27,7 @@ dependencies:
 - mtl
 - zlib
 - uri-encode
+- containers
 
 library:
   source-dirs: src

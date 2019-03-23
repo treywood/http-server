@@ -5,10 +5,10 @@ module Http.Request.Parser
 import Http.Parser
 import Http.Request
 import Http.Headers
-import Http.QueryString
 import qualified Data.ByteString.Lazy as S
-import Data.List
+import Data.List as List
 import Data.Char
+import Data.Map as Map
 import Network.URI.Encode
 
 import Control.Monad.State
@@ -20,17 +20,17 @@ parseHeaders = parseHeaders' []
     parseHeaders' hs = do
       line <- chompLine
       chomp
-      if (null line) then
+      if (List.null line) then
         return hs
       else
         let
           name = takeWhile (/= ':') line
-          value = drop 2 $ dropWhile (/= ':') line
+          value = List.drop 2 $ dropWhile (/= ':') line
           header = (name, value)
         in
           parseHeaders' (header:hs)
 
-parseQueryString :: State S.ByteString QueryString
+parseQueryString :: State S.ByteString [(String, String)]
 parseQueryString = do
     maybeC <- peek
     case maybeC of
@@ -39,11 +39,11 @@ parseQueryString = do
         parseQueryString' []
       _ -> return []
   where
-    parseQueryString' :: QueryString -> State S.ByteString QueryString
+    parseQueryString' :: [(String, String)] -> State S.ByteString [(String, String)]
     parseQueryString' qs = do
       pair <- chompUntil (\c -> c == '&' || isSeparator c)
       chompIf (== '&')
-      if (null pair) then
+      if (List.null pair) then
         return qs
       else
         let
@@ -67,7 +67,7 @@ parseRequest = evalState $ do
   return Request
     { method = read method'
     , path = path'
-    , headers = headers'
-    , queryString = queryString'
+    , headers = Map.fromList headers'
+    , query = Map.fromList queryString'
     , body = S.tail body'
     }

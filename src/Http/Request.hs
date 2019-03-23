@@ -1,25 +1,25 @@
 module Http.Request
  ( Method(..)
  , Request(..)
- , WithQueryString(..)
- , WithHeaders(..)
+ , param
+ , header
  ) where
 
 import Http.Headers as H
-import Http.QueryString as Q
 import qualified Data.ByteString.Lazy as S
+import Data.Map as Map
 
 data Method = HEAD | OPTIONS | GET | POST | PUT | DELETE deriving (Show, Read, Eq)
 data Request = Request
                 { method :: Method
                 , path :: String
-                , headers :: H.Headers
-                , queryString :: Q.QueryString
+                , headers :: Map.Map String String
+                , query :: Map.Map String String
                 , body :: S.ByteString
                 } deriving (Show, Eq)
 
-instance WithHeaders Request where
-  getHeaders req = headers req
+header :: String -> Request -> Maybe String
+header name req = Map.lookup name (headers req)
 
-instance WithQueryString Request where
-  getQueryString req = (queryString req)
+param :: String -> Request -> Maybe String
+param name req = Map.lookup name (query req)
