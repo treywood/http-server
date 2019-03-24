@@ -3,14 +3,14 @@ module Http.Json.Parser
  ) where
 
 import Http.Json
-import Http.Parser
+import Http.Parser as P
 
 import qualified Data.ByteString.Lazy as S
 import Control.Monad.State
 import Data.Char
 import Data.List
 
-parseArray :: State S.ByteString (Either String [Json])
+parseArray :: State ParseState (ParseResult [Json])
 parseArray = do
     maybeC <- peek
     case maybeC of
@@ -18,31 +18,31 @@ parseArray = do
         chomp
         parseArray' []
       Just c ->
-        return $ Left ("Expected '[' got '" ++ [c] ++ "'")
+        P.fail $ "Expected '[' got '" ++ [c] ++ "'"
       _      ->
-        return $ Left "Expected '[' got end of input"
+        P.fail "Expected '[' got end of input"
   where
-    parseArray' :: [Json] -> State S.ByteString (Either String [Json])
+    parseArray' :: [Json] -> State ParseState (ParseResult [Json])
     parseArray' es = do
       maybeC <- peek
       case maybeC of
-        Just ']'      -> chomp >> (return $ Right es)
+        Just ']'      -> chomp >> (P.succeed es)
         Just ','
-          | null es   -> return $ Left "unexpected ','"
+          | null es   -> P.fail "unexpected ','"
           | otherwise -> chomp >> next es
-        Nothing -> return $ Left "unexpected end of input"
+        Nothing -> P.fail "unexpected end of input"
         _ -> next es
 
-    next :: [Json] -> State S.ByteString (Either String [Json])
+    next :: [Json] -> State ParseState (ParseResult [Json])
     next es = do
       chompWhile isSeparator
       result <- parseJson'
       chompWhile isSeparator
       case result of
-        Left err    -> return $ Left err
+        Left err    -> P.fail err
         Right json  -> parseArray' (es ++ [json])
 
-parseObject :: State S.ByteString (Either String [JsonField])
+parseObject :: State ParseState (ParseResult [JsonField])
 parseObject = do
     maybeC <- peek
     case maybeC of
@@ -50,35 +50,35 @@ parseObject = do
         chomp
         parseObject' []
       Just c ->
-        return $ Left ("Expected '{' got '" ++ [c] ++ "'")
+        P.fail $ "Expected '{' got '" ++ [c] ++ "'"
       _      ->
-        return $ Left "Expected '{' got end of input"
+        P.fail "Expected '{' got end of input"
   where
-    parseObject' :: [JsonField] -> State S.ByteString (Either String [JsonField])
+    parseObject' :: [JsonField] -> State ParseState (ParseResult [JsonField])
     parseObject' fs = do
       maybeC <- peek
       case maybeC of
-        Just '}'      -> chomp >> (return $ Right fs)
+        Just '}'      -> chomp >> (P.succeed fs)
         Just ','
-          | null fs   -> return $ Left "unexpected ','"
+          | null fs   -> P.fail "unexpected ','"
           | otherwise -> chomp >> next fs
         Nothing -> return $ Left "unexpected end of input"
         _ -> next fs
 
-    next :: [JsonField] -> State S.ByteString (Either String [JsonField])
+    next :: [JsonField] -> State ParseState (ParseResult [JsonField])
     next fs = do
       chompWhile isSeparator
       parsedName <- parseFieldName
       case parsedName of
-        Left err   -> return $ Left err
+        Left err   -> P.fail err
         Right name -> do
           result <- parseJson'
           chompWhile isSeparator
           case result of
-            Left err    -> return $ Left err
+            Left err    -> P.fail err
             Right value -> parseObject' (fs ++ [(name, value)])
 
-    parseFieldName :: State S.ByteString (Either String String)
+    parseFieldName :: State ParseState (ParseResult String)
     parseFieldName = do
       maybeC <- peek
       case maybeC of
@@ -86,12 +86,12 @@ parseObject = do
           chomp
           name <- chompWhile isAlpha
           chomp >> (chompIf (== ':')) >> (chompWhile isSeparator)
-          return $ Right name
+          P.succeed name
 
-        Just c -> return $ Left ("unexpected " ++ [c])
+        Just c -> P.fail $ "unexpected " ++ [c]
 
 
-parseJson' :: State S.ByteString (Either String Json)
+parseJson' :: State ParseState (ParseResult Json)
 parseJson' = do
    maybeC <- peek
    case maybeC of
@@ -99,34 +99,34 @@ parseJson' = do
        chomp
        word <- chompUntil (== '"')
        chomp
-       return $ Right (JsonString word)
+       P.succeed $ JsonString word
 
      Just '[' -> do
        result <- parseArray
        case result of
-        Right elems -> return $ Right (JsonArray elems)
-        Left err    -> return $ Left err
+        Right elems -> P.succeed $ JsonArray elems
+        Left err    -> P.fail err
 
      Just '{' -> do
       result <- parseObject
       case result of
-        Right fields -> return $ Right (JsonObject fields)
-        Left err     -> return $ Left err
+        Right fields -> P.succeed $ JsonObject fields
+        Left err     -> P.fail err
 
      Just c
       | isNumber c -> do
          num <- chompWhile isNumber
-         return $ (Right (JsonInt $ read num))
+         P.succeed (JsonInt $ read num)
 
       | otherwise -> do
         word <- chompWhile isAlpha
         case word of
-          "true"  -> return $ Right (JsonBool True)
-          "false" -> return $ Right (JsonBool False)
-          "null"  -> return $ Right JsonNull
-          _       -> return (Left $ "unknown symbol '" ++ word ++ "'")
+          "true"  -> P.succeed $ JsonBool True
+          "false" -> P.succeed $ JsonBool False
+          "null"  -> P.succeed JsonNull
+          _       -> P.fail $ "unknown symbol '" ++ word ++ "'"
 
-     _ -> return $ Left "unexpected end of input"
+     _ -> P.fail "unexpected end of input"
 
-parseJson :: S.ByteString -> Either String Json
-parseJson = evalState $ parseJson'
+parseJson :: S.ByteString -> ParseResult Json
+parseJson str = evalState parseJson' $ (str, 0)

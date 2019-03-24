@@ -44,7 +44,7 @@ route Req.GET ["api", "json"] _ = do
     respond $ JsonObject [("name", JsonString "Trey"), ("age", JsonInt 30)]
 
 route Req.POST ["api", "json"] req =
-  case parseJson (Req.body req) of
+  case Req.json req of
     Right json ->
       case get "name" json of
         Just (JsonString name) -> respond $ "Your name is " ++ name

@@ -3,6 +3,8 @@ module Specs.Request (requestTests) where
 import Http.Request.Parser
 import Http.Request
 
+import Data.Map as Map
+
 import Test.Tasty
 import Test.Tasty.HUnit
 import qualified Data.ByteString.Lazy.Char8 as BC
@@ -17,8 +19,8 @@ requestTests = testGroup "HTTP Request"
         @?= Request
           { method = POST
           , path = "/path"
-          , queryString = [("second","one"),("query","the value")]
-          , headers = [("Accept","*/*"),("Host","www.google.com")]
+          , query = Map.fromList [("second","one"),("query","the value")]
+          , headers = Map.fromList [("Accept","*/*"),("Host","www.google.com")]
           , body = BC.pack "message"
           }
   ]

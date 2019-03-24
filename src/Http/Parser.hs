@@ -1,5 +1,7 @@
 module Http.Parser
- ( chomp
+ ( ParseResult
+ , ParseState
+ , chomp
  , chompUntil
  , chompWord
  , chompLine
@@ -7,6 +9,8 @@ module Http.Parser
  , chompWhile
  , chompIf
  , peek
+ , Http.Parser.fail
+ , succeed
  ) where
 
 import qualified Data.ByteString.Lazy as S
@@ -15,14 +19,17 @@ import Data.List
 import Data.Char
 import Control.Monad.State
 
-chomp :: State S.ByteString (Maybe Char)
-chomp = state $ \str -> case (BC.uncons str) of
-  Just (c, tl) -> (Just c, tl)
-  _            -> (Nothing, BC.empty)
+type ParseResult a = Either String a
+type ParseState = (S.ByteString, Int)
+
+chomp :: State ParseState (Maybe Char)
+chomp = state $ \(str, p) -> case (BC.uncons str) of
+  Just (c, tl) -> (Just c, (tl, p + 1))
+  _            -> (Nothing, (BC.empty, p))
 
 chompUntil = chompUntil' ""
   where
-    chompUntil' :: String -> (Char -> Bool) -> State S.ByteString String
+    chompUntil' :: String -> (Char -> Bool) -> State ParseState String
     chompUntil' str p = do
       maybeC <- peek
       case maybeC of
@@ -37,7 +44,7 @@ chompLine = chompUntil (== '\r')
 
 chompWhile = chompWhile' ""
   where
-    chompWhile' :: String -> (Char -> Bool) -> State S.ByteString String
+    chompWhile' :: String -> (Char -> Bool) -> State ParseState String
     chompWhile' str p = do
       maybeC <- peek
       case maybeC of
@@ -49,14 +56,14 @@ chompWhile = chompWhile' ""
 
 chompAll = chompAll' ""
   where
-    chompAll' :: String -> State S.ByteString String
+    chompAll' :: String -> State ParseState String
     chompAll' str = do
       maybeC <- chomp
       case maybeC of
         Just c  -> chompAll' (str ++ [c])
         _       -> return str
 
-chompIf :: (Char -> Bool) -> State S.ByteString (Maybe Char)
+chompIf :: (Char -> Bool) -> State ParseState (Maybe Char)
 chompIf p = do
   maybeC <- peek
   case maybeC of
@@ -66,17 +73,15 @@ chompIf p = do
 
     _ -> return Nothing
 
-peek :: State S.ByteString (Maybe Char)
-peek = state $ \str -> case (BC.uncons str) of
-  Just (c, _)  -> (Just c, str)
-  _            -> (Nothing, BC.empty)
+peek :: State ParseState (Maybe Char)
+peek = state $ \(str, p) -> case (BC.uncons str) of
+  Just (c, _)  -> (Just c, (str, p))
+  _            -> (Nothing, (BC.empty, p))
 
-expect :: Char -> State S.ByteString (Either String ())
-expect char = do
-  maybeC <- peek
-  case maybeC of
-    Just c
-      | c == char -> return $ Right ()
-      | otherwise -> return (Left $ "expected '" ++ [char] ++ "' but found '" ++ [c])
+succeed :: a -> State ParseState (ParseResult a)
+succeed a = return $ Right a
 
-    _ -> return (Left $ "expected '" ++ [char] ++ "' but got end of input")
+fail :: String -> State ParseState (ParseResult a)
+fail msg = do
+  (_, pos) <- get
+  return $ Left (msg ++ " at position " ++ (show pos))

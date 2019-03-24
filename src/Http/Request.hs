@@ -3,9 +3,11 @@ module Http.Request
  , Request(..)
  , param
  , header
+ , json
  ) where
 
-import Http.Headers as H
+import Http.Json
+import Http.Json.Parser
 import qualified Data.ByteString.Lazy as S
 import Data.Map as Map
 
@@ -23,3 +25,6 @@ header name req = Map.lookup name (headers req)
 
 param :: String -> Request -> Maybe String
 param name req = Map.lookup name (query req)
+
+json :: Request -> Either String Json
+json req = parseJson (body req)
