@@ -11,6 +11,8 @@ module Http.Response
 import Http.Headers
 import Http.Json
 
+import Html (Element)
+
 import qualified Data.ByteString.Lazy as S
 import qualified Data.ByteString.Lazy.Char8 as BC
 import qualified Codec.Compression.GZip as GZip
@@ -105,3 +107,9 @@ instance (Respond a, Integral n) => Respond (n, a) where
 instance (Respond a) => Respond (Either String a) where
   toResponse (Right r) = toResponse r
   toResponse (Left err) = toResponse (500, err)
+
+instance Respond Element where
+  toResponse el = Just $ response
+    { headers = [("Content-Type", "text/html")]
+    , body = BC.pack $ show el
+    }

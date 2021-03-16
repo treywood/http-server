@@ -84,7 +84,7 @@ parseObject = do
       case maybeC of
         Just '"' -> do
           chomp
-          name <- chompWhile isAlpha
+          name <- chompUntil (\c -> c == '"')
           chomp >> (chompIf (== ':')) >> (chompWhile isSeparator)
           P.succeed name
 
