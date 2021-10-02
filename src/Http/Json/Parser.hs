@@ -2,13 +2,13 @@ module Http.Json.Parser
  ( parseJson
  ) where
 
-import Http.Json
-import Http.Parser as P
+import           Http.Json
+import           Http.Parser          as P
 
+import           Control.Monad.State
 import qualified Data.ByteString.Lazy as S
-import Control.Monad.State
-import Data.Char
-import Data.List
+import           Data.Char
+import           Data.List
 
 parseArray :: State ParseState (ParseResult [Json])
 parseArray = do
@@ -26,7 +26,7 @@ parseArray = do
     parseArray' es = do
       maybeC <- peek
       case maybeC of
-        Just ']'      -> chomp >> (P.succeed es)
+        Just ']'      -> chomp >> P.succeed es
         Just ','
           | null es   -> P.fail "unexpected ','"
           | otherwise -> chomp >> next es
@@ -39,8 +39,8 @@ parseArray = do
       result <- parseJson'
       chompWhile isSeparator
       case result of
-        Left err    -> P.fail err
-        Right json  -> parseArray' (es ++ [json])
+        Left err   -> P.fail err
+        Right json -> parseArray' (es ++ [json])
 
 parseObject :: State ParseState (ParseResult [JsonField])
 parseObject = do
@@ -58,7 +58,7 @@ parseObject = do
     parseObject' fs = do
       maybeC <- peek
       case maybeC of
-        Just '}'      -> chomp >> (P.succeed fs)
+        Just '}'      -> chomp >> P.succeed fs
         Just ','
           | null fs   -> P.fail "unexpected ','"
           | otherwise -> chomp >> next fs
@@ -84,11 +84,13 @@ parseObject = do
       case maybeC of
         Just '"' -> do
           chomp
-          name <- chompUntil (\c -> c == '"')
-          chomp >> (chompIf (== ':')) >> (chompWhile isSeparator)
+          name <- chompUntil (== '"')
+          chomp >> chompIf (== ':') >> chompWhile isSeparator
           P.succeed name
 
         Just c -> P.fail $ "unexpected " ++ [c]
+
+        Nothing -> P.fail "unexpected end of input"
 
 
 parseJson' :: State ParseState (ParseResult Json)
@@ -129,4 +131,5 @@ parseJson' = do
      _ -> P.fail "unexpected end of input"
 
 parseJson :: S.ByteString -> ParseResult Json
-parseJson str = evalState parseJson' $ (str, 0)
+parseJson str = evalState parseJson' (str, 0)
+

@@ -2,16 +2,16 @@ module Http.Request.Parser
  ( parseRequest
  ) where
 
-import Http.Parser
-import Http.Request
-import Http.Headers
 import qualified Data.ByteString.Lazy as S
-import Data.List as List
-import Data.Char
-import Data.Map as Map
-import Network.URI.Encode
+import           Data.Char
+import           Data.List            as List
+import           Data.Map             as Map
+import           Http.Headers
+import           Http.Parser
+import           Http.Request
+import           Network.URI.Encode
 
-import Control.Monad.State
+import           Control.Monad.State
 
 parseHeaders :: State ParseState Headers
 parseHeaders = parseHeaders' []
@@ -20,7 +20,7 @@ parseHeaders = parseHeaders' []
     parseHeaders' hs = do
       line <- chompLine
       chomp
-      if (List.null line) then
+      if List.null line then
         return hs
       else
         let
@@ -43,7 +43,7 @@ parseQueryString = do
     parseQueryString' qs = do
       pair <- chompUntil (\c -> c == '&' || isSeparator c)
       chompIf (== '&')
-      if (List.null pair) then
+      if List.null pair then
         return qs
       else
         let
@@ -73,4 +73,5 @@ parseRequest' = do
       }
 
 parseRequest :: S.ByteString -> Request
-parseRequest str = evalState parseRequest' $ (str, 0)
+parseRequest str = evalState parseRequest' (str, 0)
+

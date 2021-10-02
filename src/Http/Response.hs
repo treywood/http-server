@@ -8,15 +8,15 @@ module Http.Response
  , Respond(..)
  ) where
 
-import Http.Headers
-import Http.Json
+import           Http.Headers
+import           Http.Json
 
-import Html (Element)
+import           Html                       (Element)
 
-import qualified Data.ByteString.Lazy as S
+import qualified Codec.Compression.GZip     as GZip
+import qualified Data.ByteString.Lazy       as S
 import qualified Data.ByteString.Lazy.Char8 as BC
-import qualified Codec.Compression.GZip as GZip
-import Data.List
+import           Data.List
 
 data Response = Response { status :: Int, headers :: Headers, body :: S.ByteString, gzip :: Bool }
 
@@ -26,21 +26,21 @@ statusDescription 201 = "Created"
 statusDescription 204 = "No Content"
 statusDescription 400 = "Bad Request"
 statusDescription 404 = "Not Found"
-statusDescription _ = ""
+statusDescription _   = ""
 
 serializeResponse :: Response -> S.ByteString
 serializeResponse res =
   let
     (content, encoding) =
-      if (gzip res) then
+      if gzip res then
         (GZip.compress (body res), "gzip")
       else
         (body res, "identity")
     len = S.length content
     head = BC.unlines $ map BC.pack
-      [ "HTTP/1.1 " ++ (show $ status res) ++ " " ++ (statusDescription $ status res)
+      [ "HTTP/1.1 " ++ show (status res) ++ " " ++ statusDescription (status res)
       , serializeHeaders (headers res)
-      , "Content-Length: " ++ (show $ len)
+      , "Content-Length: " ++ show len
       , "Content-Encoding: " ++ encoding
       , ""
       ]
@@ -58,7 +58,7 @@ response = Response
 notFoundResponse = response
   { status = 404
   , headers = [("Content-Type", "text/plain")]
-  , body = BC.pack $ "Not Found"
+  , body = BC.pack "Not Found"
   }
 
 -- Respond
@@ -68,8 +68,8 @@ class Respond a where
 
   respond :: a -> IO Response
   respond a = case toResponse a of
-    Just r  -> return r
-    _       -> return notFoundResponse
+    Just r -> return r
+    _      -> return notFoundResponse
 
 instance Respond Response where
   toResponse r = Just r
@@ -105,7 +105,7 @@ instance (Respond a, Integral n) => Respond (n, a) where
     return res { status = fromIntegral code }
 
 instance (Respond a) => Respond (Either String a) where
-  toResponse (Right r) = toResponse r
+  toResponse (Right r)  = toResponse r
   toResponse (Left err) = toResponse (500, err)
 
 instance Respond Element where
@@ -113,3 +113,4 @@ instance Respond Element where
     { headers = [("Content-Type", "text/html")]
     , body = BC.pack $ show el
     }
+

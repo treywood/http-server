@@ -8,14 +8,14 @@ module Html.Attr
   , Html.Attr.checked
   ) where
 
-import Data.List (intercalate)
-import Html (Attribute)
+import           Data.List (intercalate)
+import           Html      (Attribute)
 
 attr :: String -> String -> Attribute
 attr name value = (name, value)
 
 class_ :: [String] -> Attribute
-class_ names = attr "class" $ intercalate " " names
+class_ names = attr "class" $ unwords names
 
 type_ :: String -> Attribute
 type_ = attr "type"
@@ -38,3 +38,4 @@ checked b =
 
 action :: String -> Attribute
 action = attr "action"
+

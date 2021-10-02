@@ -7,27 +7,27 @@ module Http.Server
     , sendFile
     ) where
 
-import Control.Concurrent (forkFinally)
-import qualified Control.Exception as E
-import Control.Monad (unless, forever, void)
-import Data.List
-import Data.List.Split
-import qualified Data.ByteString.Lazy as S
+import           Control.Concurrent         (forkFinally)
+import qualified Control.Exception          as E
+import           Control.Monad              (forever, unless, void)
+import qualified Data.ByteString.Lazy       as S
 import qualified Data.ByteString.Lazy.Char8 as BC
-import Network.Socket
-import Network.Socket.ByteString (recv, sendAll)
-import System.IO.Error
+import           Data.List
+import           Data.List.Split
+import           Network.Socket
+import           Network.Socket.ByteString  (recv, sendAll)
+import           System.IO.Error
 
-import qualified Http.Request as Req
-import Http.Request.Parser
-import Http.Response
+import qualified Http.Request               as Req
+import           Http.Request.Parser
+import           Http.Response
 
 type Routes = Req.Method -> [String] -> Req.Request -> IO Response
 data ServerOptions = ServerOptions { port :: Int, routes :: Routes }
 
 defaultOptions = ServerOptions
   { port = 3000
-  , routes = \_ _ _ -> respond $ (Nothing :: Maybe ())
+  , routes = \_ _ _ -> respond (Nothing :: Maybe ())
   }
 
 startServer :: ServerOptions -> IO ()
@@ -65,12 +65,12 @@ startServer opts = withSocketsDo $ do
           close conn
 
 contentTypeForExt :: String -> String
-contentTypeForExt "js"    = "application/javascript"
-contentTypeForExt "html"  = "text/html"
-contentTypeForExt "png"   = "img/png"
-contentTypeForExt "jpg"   = "img/jpg"
-contentTypeForExt "css"   = "text/css"
-contentTypeForExt _       = "text/plain"
+contentTypeForExt "js"   = "application/javascript"
+contentTypeForExt "html" = "text/html"
+contentTypeForExt "png"  = "img/png"
+contentTypeForExt "jpg"  = "img/jpg"
+contentTypeForExt "css"  = "text/css"
+contentTypeForExt _      = "text/plain"
 
 sendFile :: String -> IO Response
 sendFile path = do
@@ -95,7 +95,8 @@ static dir filePath = do
 handleRequest :: S.ByteString -> Routes -> IO S.ByteString
 handleRequest msg routes = do
   let req = parseRequest msg
-  putStrLn (show req)
+  print req
   let pathParts = [ p | p <- splitOn "/" (Req.path req), not (null p) ]
   res <- routes (Req.method req) pathParts req
   return $ serializeResponse res
+
