@@ -1,7 +1,7 @@
 module Http.Headers
- ( Headers
- , serializeHeaders
- ) where
+  ( Headers
+  , serializeHeaders
+  ) where
 
 import           Data.List
 
@@ -12,4 +12,3 @@ serializeHeaders hs = intercalate "\n" (map fmt hs)
   where
     fmt :: (String, String) -> String
     fmt (k, v) = k ++ ": " ++ v
-

@@ -1,11 +1,11 @@
 module Http.Server
-    ( startServer
-    , ServerOptions(..)
-    , defaultOptions
-    , Routes
-    , static
-    , sendFile
-    ) where
+  ( startServer
+  , ServerOptions(..)
+  , defaultOptions
+  , Routes
+  , static
+  , sendFile
+  ) where
 
 import           Control.Concurrent         (forkFinally)
 import qualified Control.Exception          as E
@@ -23,46 +23,49 @@ import           Http.Request.Parser
 import           Http.Response
 
 type Routes = Req.Method -> [String] -> Req.Request -> IO Response
-data ServerOptions = ServerOptions { port :: Int, routes :: Routes }
 
-defaultOptions = ServerOptions
-  { port = 3000
-  , routes = \_ _ _ -> respond (Nothing :: Maybe ())
-  }
+data ServerOptions =
+  ServerOptions
+    { port   :: Int
+    , routes :: Routes
+    }
+
+defaultOptions =
+  ServerOptions {port = 3000, routes = \_ _ _ -> respond (Nothing :: Maybe ())}
 
 startServer :: ServerOptions -> IO ()
-startServer opts = withSocketsDo $ do
+startServer opts =
+  withSocketsDo $ do
     addr <- resolve (show $ port opts)
     E.bracket (open addr) close loop
   where
     resolve port = do
-        let hints = defaultHints {
-                addrFlags = [AI_PASSIVE]
-              , addrSocketType = Stream
-              }
-        addr:_ <- getAddrInfo (Just hints) Nothing (Just port)
-        return addr
+      let hints =
+            defaultHints {addrFlags = [AI_PASSIVE], addrSocketType = Stream}
+      addr:_ <- getAddrInfo (Just hints) Nothing (Just port)
+      return addr
     open addr = do
-        sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
-        setSocketOption sock ReuseAddr 1
+      sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+      setSocketOption sock ReuseAddr 1
         -- If the prefork technique is not used,
         -- set CloseOnExec for the security reasons.
-        fd <- fdSocket sock
-        setCloseOnExecIfNeeded fd
-        bind sock (addrAddress addr)
-        listen sock 10
-        putStrLn $ "Listening at " ++ show (addrAddress addr)
-        return sock
-    loop sock = forever $ do
+      fd <- fdSocket sock
+      setCloseOnExecIfNeeded fd
+      bind sock (addrAddress addr)
+      listen sock 10
+      putStrLn $ "Listening at " ++ show (addrAddress addr)
+      return sock
+    loop sock =
+      forever $ do
         (conn, peer) <- accept sock
         putStrLn $ "Connection from " ++ show peer
         void $ forkFinally (talk conn) (\_ -> close conn)
     talk conn = do
-        msg <- fmap S.fromStrict (recv conn 1024)
-        unless (S.null msg) $ do
-          response <- handleRequest msg (routes opts)
-          sendAll conn (S.toStrict response)
-          close conn
+      msg <- fmap S.fromStrict (recv conn 1024)
+      unless (S.null msg) $ do
+        response <- handleRequest msg (routes opts)
+        sendAll conn (S.toStrict response)
+        close conn
 
 contentTypeForExt :: String -> String
 contentTypeForExt "js"   = "application/javascript"
@@ -78,14 +81,15 @@ sendFile path = do
   result <- E.try $ S.readFile path
   case result of
     Right contents ->
-      return $ response
+      return $
+      response
         { headers = [("Content-Type", contentTypeForExt ext)]
         , body = contents
         , gzip = True
         }
     Left err
       | isDoesNotExistError err -> return notFoundResponse
-      | otherwise               -> respond (500, E.displayException err)
+      | otherwise -> respond (500, E.displayException err)
 
 static :: String -> String -> IO Response
 static dir filePath = do
@@ -96,7 +100,6 @@ handleRequest :: S.ByteString -> Routes -> IO S.ByteString
 handleRequest msg routes = do
   let req = parseRequest msg
   print req
-  let pathParts = [ p | p <- splitOn "/" (Req.path req), not (null p) ]
+  let pathParts = [p | p <- splitOn "/" (Req.path req), not (null p)]
   res <- routes (Req.method req) pathParts req
   return $ serializeResponse res
-

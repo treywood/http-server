@@ -25,8 +25,8 @@ import           Data.List (intercalate)
 
 type Attribute = (String, String)
 
-data Element =
-    Element String [Attribute] [Element]
+data Element
+  = Element String [Attribute] [Element]
   | LeafElement String [Attribute]
   | Text String
 
@@ -74,22 +74,18 @@ printEl :: Element -> String
 printEl = printIndent 0
   where
     printIndent i (Element name attrs children) =
-      tabs i ++ "<" ++ name ++ printAttrs attrs ++ ">" ++
-        printChildren (i + 1) children ++
-      tabs i ++ "</" ++ name ++ ">"
-
+      tabs i ++
+      "<" ++
+      name ++
+      printAttrs attrs ++
+      ">" ++ printChildren (i + 1) children ++ tabs i ++ "</" ++ name ++ ">"
     printIndent i (LeafElement name attrs) =
       tabs i ++ "<" ++ name ++ printAttrs attrs ++ "/>"
-
     printIndent i (Text str) = tabs i ++ str
-
     tabs i = concat $ replicate i "  "
-
     printAttrs []    = ""
     printAttrs attrs = " " ++ unwords (map printAttr attrs)
-
     printAttr (name, value) = name ++ "=\"" ++ value ++ "\""
-
     printChildren _ [] = ""
     printChildren i children =
       "\n" ++ intercalate "\n" (map (printIndent i) children) ++ "\n"
