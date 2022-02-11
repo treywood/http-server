@@ -31,10 +31,10 @@ data Request =
   deriving (Show, Eq)
 
 header :: String -> Request -> Maybe String
-header name req = Map.lookup name (headers req)
+header name = Map.lookup name . headers
 
 param :: String -> Request -> Maybe String
-param name req = Map.lookup name (query req)
+param name = Map.lookup name . query
 
 json :: Request -> Either String Json
-json req = parseJson (body req)
+json = parseJson . body

@@ -70,25 +70,26 @@ li = tag "li"
 
 text = Text
 
-printEl :: Element -> String
-printEl = printIndent 0
-  where
-    printIndent i (Element name attrs children) =
-      tabs i ++
-      "<" ++
-      name ++
-      printAttrs attrs ++
-      ">" ++ printChildren (i + 1) children ++ tabs i ++ "</" ++ name ++ ">"
-    printIndent i (LeafElement name attrs) =
-      tabs i ++ "<" ++ name ++ printAttrs attrs ++ "/>"
-    printIndent i (Text str) = tabs i ++ str
-    tabs i = concat $ replicate i "  "
-    printAttrs []    = ""
-    printAttrs attrs = " " ++ unwords (map printAttr attrs)
-    printAttr (name, value) = name ++ "=\"" ++ value ++ "\""
-    printChildren _ [] = ""
-    printChildren i children =
-      "\n" ++ intercalate "\n" (map (printIndent i) children) ++ "\n"
-
 instance Show Element where
   show el = printEl el
+    where
+      printEl :: Element -> String
+      printEl = printIndent 0
+        where
+          printIndent i (Element name attrs children) =
+            tabs i ++
+            "<" ++
+            name ++
+            printAttrs attrs ++
+            ">" ++
+            printChildren (i + 1) children ++ tabs i ++ "</" ++ name ++ ">"
+          printIndent i (LeafElement name attrs) =
+            tabs i ++ "<" ++ name ++ printAttrs attrs ++ "/>"
+          printIndent i (Text str) = tabs i ++ str
+          tabs i = concat $ replicate i "  "
+          printAttrs []    = ""
+          printAttrs attrs = " " ++ unwords (map printAttr attrs)
+          printAttr (name, value) = name ++ "=\"" ++ value ++ "\""
+          printChildren _ [] = ""
+          printChildren i children =
+            "\n" ++ intercalate "\n" (map (printIndent i) children) ++ "\n"

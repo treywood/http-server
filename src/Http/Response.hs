@@ -35,24 +35,24 @@ statusDescription 404 = "Not Found"
 statusDescription _   = ""
 
 serializeResponse :: Response -> S.ByteString
-serializeResponse res =
-  let (content, encoding) =
-        if gzip res
-          then (GZip.compress (body res), "gzip")
-          else (body res, "identity")
-      len = S.length content
-      head =
-        BC.unlines $
-        map
-          BC.pack
-          [ "HTTP/1.1 " ++
-            show (status res) ++ " " ++ statusDescription (status res)
-          , serializeHeaders (headers res)
-          , "Content-Length: " ++ show len
-          , "Content-Encoding: " ++ encoding
-          , ""
-          ]
-   in BC.append head content
+serializeResponse res = BC.append head content
+  where
+    (content, encoding) =
+      if gzip res
+        then (GZip.compress (body res), "gzip")
+        else (body res, "identity")
+    len = S.length content
+    head =
+      BC.unlines $
+      map
+        BC.pack
+        [ "HTTP/1.1 " ++
+          show (status res) ++ " " ++ statusDescription (status res)
+        , serializeHeaders (headers res)
+        , "Content-Length: " ++ show len
+        , "Content-Encoding: " ++ encoding
+        , ""
+        ]
 
 response :: Response
 response = Response {status = 200, headers = [], body = BC.empty, gzip = False}
