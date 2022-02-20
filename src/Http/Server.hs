@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedRecordDot #-}
 module Http.Server
   ( startServer
   , ServerOptions(..)
@@ -49,12 +50,12 @@ startServer opts =
       setSocketOption sock ReuseAddr 1
         -- If the prefork technique is not used,
         -- set CloseOnExec for the security reasons.
-      fd <- fdSocket sock
-      setCloseOnExecIfNeeded fd
-      bind sock (addrAddress addr)
-      listen sock 10
-      putStrLn $ "Listening at " ++ show (addrAddress addr)
-      return sock
+      withFdSocket sock $ \fd -> do
+        setCloseOnExecIfNeeded fd
+        bind sock (addrAddress addr)
+        listen sock 10
+        putStrLn $ "Listening at " ++ show (addrAddress addr)
+        return sock
     loop sock =
       forever $ do
         (conn, peer) <- accept sock
@@ -100,6 +101,6 @@ handleRequest :: S.ByteString -> Routes -> IO S.ByteString
 handleRequest msg routes = do
   let req = parseRequest msg
   print req
-  let pathParts = [p | p <- splitOn "/" (Req.path req), not (null p)]
-  res <- routes (Req.method req) pathParts req
+  let pathParts = [p | p <- splitOn "/" req.path, not (null p)]
+  res <- routes req.method pathParts req
   return $ serializeResponse res

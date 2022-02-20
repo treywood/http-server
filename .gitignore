@@ -4,3 +4,4 @@ http-server.cabal
 target
 elm-stuff
 node_modules
+dist-newstyle/

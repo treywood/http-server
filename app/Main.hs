@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedRecordDot #-}
 module Main (main) where
 
 import           Http.Json
@@ -20,13 +21,12 @@ import qualified Html.Attr                  as A
 route :: Routes
 route Req.POST ["api", "path"] req =
   let
-    method' = show $ Req.method req
-    path' = Req.path req
-    headers' = show $ Req.headers req
-    body' = BC.unpack (Req.body req)
+    method' = show req.method
+    headers' = show req.headers
+    body' = BC.unpack req.body
   in
     respond $
-      "You sent a " ++ method' ++ " request to " ++ path' ++
+      "You sent a " ++ method' ++ " request to " ++ req.path ++
       " with headers: " ++ headers' ++ " and body: " ++ body'
 
 route Req.GET ["api", "greet", name] req =

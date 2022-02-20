@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, OverloadedRecordDot #-}
 
 module Http.Response
   ( Response(..)
@@ -39,16 +39,16 @@ serializeResponse res = BC.append head content
   where
     (content, encoding) =
       if gzip res
-        then (GZip.compress (body res), "gzip")
-        else (body res, "identity")
+        then (GZip.compress res.body, "gzip")
+        else (res.body, "identity")
     len = S.length content
     head =
       BC.unlines $
       map
         BC.pack
         [ "HTTP/1.1 " ++
-          show (status res) ++ " " ++ statusDescription (status res)
-        , serializeHeaders (headers res)
+          show res.status ++ " " ++ statusDescription res.status
+        , serializeHeaders res.headers
         , "Content-Length: " ++ show len
         , "Content-Encoding: " ++ encoding
         , ""
