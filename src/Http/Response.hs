@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, OverloadedRecordDot #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Http.Response
   ( Response(..)
@@ -56,7 +56,6 @@ serializeResponse res = BC.append head content
 
 response :: Response
 response = Response {status = 200, headers = [], body = BC.empty, gzip = False}
-
 notFoundResponse =
   response
     { status = 404

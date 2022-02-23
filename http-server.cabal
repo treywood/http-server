@@ -1,0 +1,105 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 9b26b247c77725b58044d8216c4b5bf76d98a3224183e212e7f8604ee989a330
+
+name:           http-server
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/http-server#readme>
+homepage:       https://github.com/githubuser/http-server#readme
+bug-reports:    https://github.com/githubuser/http-server/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2019 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/http-server
+
+library
+  exposed-modules:
+      Html
+      Html.Attr
+      Http.ContentType
+      Http.Headers
+      Http.Json
+      Http.Json.Parser
+      Http.Parser
+      Http.Request
+      Http.Request.Parser
+      Http.Response
+      Http.Server
+  other-modules:
+      Paths_http_server
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , megaparsec
+    , mtl
+    , network >=3
+    , split
+    , uri-encode
+    , zlib
+  default-language: Haskell2010
+  default-extensions:
+      OverloadedRecordDot
+
+executable http-server-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_http_server
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.16 && <5
+    , bytestring
+    , containers
+    , http-server
+    , http-client
+    , mtl
+    , network >=3
+    , split
+    , uri-encode
+    , zlib
+  default-language: Haskell2010
+  default-extensions:
+      OverloadedRecordDot
+
+test-suite http-server-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Specs.Json
+      Specs.Request
+      Paths_http_server
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , http-server
+    , mtl
+    , network >=3
+    , split
+    , tasty
+    , tasty-hunit
+    , uri-encode
+    , zlib
+  default-language: Haskell2010
+  default-extensions:
+      OverloadedRecordDot

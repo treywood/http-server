@@ -1,7 +1,5 @@
-.stack-work/
-http-server.cabal
-.idea
-target
-elm-stuff
-node_modules
+.idea/
+target/
+elm-stuff/
+node_modules/
 dist-newstyle/

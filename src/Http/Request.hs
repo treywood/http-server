@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedRecordDot #-}
 module Http.Request
   ( Method(..)
   , Request(..)
